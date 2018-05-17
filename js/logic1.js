@@ -13,17 +13,34 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
       for (var index = 0; index < features.length; index++) {
         var quake = features[index];
     
-        // var color = 
+        function chooseColor(mag) {
+          switch (mag) {
+            case 0:
+              return "green";
+            case 1:
+              return "yellow";
+            case 1-2:
+              return "orange";
+            case 2-3:
+              return "green";
+            case 5:
+              return "purple";
+            case 5:
+              return "purple";
+            default:
+              return "black";
+          }
+        }
         // for each quake, create a marker and bind a popup with the quake's info
         var quakeMarker = L.geoJson(quake,{
         pointToLayer: function (feature, latlong){
           return L.circleMarker(latlong,{
           fillOpacity: 0.75,
           color: "white",
-          fillColor: "purple",
-          radius: feature.properties.mag * 10
+          fillColor: chooseColor(feature.properties.mag),
+          radius: feature.properties.mag * 5
         })
-          .bindPopup("<h3>" + feature.properties.mag + "<h3><h3>Place: " + feature.properties.place + "<h3>");
+          .bindPopup("<h3>Magnitude: " + feature.properties.mag + "<h3><h3>Place: " + feature.properties.place + "<h3>");
         }})
         // add the marker to the quakeMarkers array
       quakeMarkers.push(quakeMarker);
@@ -53,13 +70,13 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
   
     // create an overlayMaps object to hold the bikefeatures layer
     var overlayMaps = {
-      "Bike features": quakeMarkers
+      "Earthquakes": quakeMarkers
     };
 
     // Create the map object with options
     var map = L.map("map-id", {
-      center: [40.73, -74.0059],
-      zoom: 12,
+      center: [37.09, -95.71],
+      zoom: 5,
       layers: [lightmap, quakeMarkers]
     });
 
@@ -67,3 +84,23 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geoj
     L.control.layers(baseMaps, overlayMaps, {
       collapsed: false
     }).addTo(map);}
+
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+    
+        var div = L.DomUtil.create('div', 'info legend'),
+        magnitude = [0, 10, 20, 50, 100, 200, 500, 1000],
+        labels = [];
+    
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < features.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(magnitude[i] + 1) + '"></i> ' +
+                magnitude[i] + (magnitude[i + 1] ? '&ndash;' + magnitude[i + 1] + '<br>' : '+');
+        }
+    
+        return div;
+    };
+    
+    legend.addTo(map);
